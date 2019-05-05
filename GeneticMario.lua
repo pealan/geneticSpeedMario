@@ -66,7 +66,53 @@ function initializationRandom(p,size)
 end
 
 function fitness(mario)
-	return 
+	return
+end
+
+function crossover_random(chromossome1, chromossome2) --crossover of a pair of chromossomes and return the results childs
+	length = table.getn(chromossome1)
+	index = math.random(1, length)
+	print("index", index)
+	child1 = {}
+	child2 = {}
+	for i = 1, index, 1 do
+		child1[i] = chromossome1[i]
+		child2[i] = chromossome2[i]
+	end
+	for i = index+1, length, 1 do
+		child1[i] = chromossome2[i]
+		child2[i] = chromossome1[i]
+	end
+	return child1, child2
+end
+
+function mutation_random(chromossome, mutation_rate)
+	length = table.getn(chromossome)
+	qnt_mutation = (mutation_rate*length)/100
+	math.floor(qnt_mutation)
+	for i = 1, qnt_mutation, 1 do
+		ind = math.random(1, length)
+		gene = math.random(1, 22)
+		chromossome[ind] = genes[gene]
+	end
+	return chromossome
+end
+
+chromossomes = initializationRandom(2, 4)
+child1, child2 = crossover_random(chromossomes[1], chromossomes[2])
+print("FILHO1")
+for k, v in ipairs(child1) do
+	print(k, v)
+end
+print("FILHO 2")
+for k, v in ipairs(child2) do
+	print(k, v)
+end
+new_chromossome = mutation_random(chromossomes[1], 25.0)
+print("mutacao")
+for k, v in ipairs(new_chromossome) do
+	print(k, v)
+end
 
 --[[ function generateIndividualDNA() --generar DNA de un invividuo random
 	local individual = {}
