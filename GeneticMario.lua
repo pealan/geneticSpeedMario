@@ -65,14 +65,86 @@ function initializationRandom(p,size)
 	return chromossomes
 end
 
-function fitness(mario)
-	return
+--[[ Fisher-Yates shuffle]]
+local function shuffle(t)
+    local rand = math.random 
+    assert(t, "table.shuffle() expected a table, got nil")
+    local iterations = #t
+    local j
+    
+    for i = iterations, 2, -1 do
+        j = rand(i)
+        t[i], t[j] = t[j], t[i]
+    end
 end
+
+function fitness(mario)
+	return mario["d"] + 8*mario["t"] + 1024*mario["s"]
+end
+
+function tournament(population,k)
+	local winners = {}
+	shuffle(population)
+	local i = 1
+	for i = 1,#population,k
+	do
+		best_fitness = -1
+		winner = population[j]
+		for j = 0,k-1,1
+		do
+			local mario = population[j+i]
+			if mario == nil then
+				break
+			end
+			f = fitness(mario)
+			if f > best_fitness then
+				best_fitness = f
+				winner = mario
+			end
+		end
+		winners[#winners+1] = winner
+	end
+
+	return winners
+end
+
+--[[ pop = {}
+for i = 1,5,1
+do
+	m = {}
+	d = math.random(1,10)
+	m["d"] = d
+	t = math.random(1,10)
+	m["t"] = t
+	s = math.random(1,10)
+	m["s"] = s
+	pop[#pop+1] = m
+end
+
+for k=1, #pop,1 do
+	local v = pop[k]
+	print(k)
+	print(v)
+end
+
+w = tournament(pop,2)
+
+print("SHUFFLED")
+for k=1, #pop,1 do
+	local v = pop[k]
+	print(k)
+	print(v)
+end
+
+for k=1, #w,1 do
+	local v = w[k]
+	print(k)
+	print(v)
+end ]]
 
 function crossover_random(chromossome1, chromossome2) --crossover of a pair of chromossomes and return the results childs
 	length = table.getn(chromossome1)
 	index = math.random(1, length)
-	print("index", index)
 	child1 = {}
 	child2 = {}
 	for i = 1, index, 1 do
@@ -98,7 +170,7 @@ function mutation_random(chromossome, mutation_rate)
 	return chromossome
 end
 
-chromossomes = initializationRandom(2, 4)
+--[[ chromossomes = initializationRandom(2, 4)
 child1, child2 = crossover_random(chromossomes[1], chromossomes[2])
 print("FILHO1")
 for k, v in ipairs(child1) do
@@ -112,7 +184,7 @@ new_chromossome = mutation_random(chromossomes[1], 25.0)
 print("mutacao")
 for k, v in ipairs(new_chromossome) do
 	print(k, v)
-end
+end ]]
 
 --[[ function generateIndividualDNA() --generar DNA de un invividuo random
 	local individual = {}
