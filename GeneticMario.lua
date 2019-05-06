@@ -45,25 +45,34 @@ local genes = {
 	{command[5],command[6],command[2],command[3]}
 }
 
-d = genes[4][1]
-local message = "cachorro" .. d
-
 math.randomseed(os.time())
 
 function initializationRandom(p,size)
-	chromossomes = {}
+	local chromossomes = {}
+	local lgenes = genes
 	for i = 1, p, 1
 	do
-		chromossome = {}
+		local chromossome = {}
 		for j = 1,size,1
 		do
-			gene = math.random(1,22)
-			chromossome[j] = genes[gene]
+			local gene = math.random(1,22)
+			chromossome[j] = lgenes[gene]
 		end
 		chromossomes[i] = chromossome
 	end
 	return chromossomes
 end
+
+--[[ r = initializationRandom(3,5)
+for k=1, #r,1 do
+	print(k)
+	local v = r[k]
+	for l = 1,5,1
+	do
+		local v2 = v[l]
+		print(v2)
+	end
+end ]]
 
 --[[ Fisher-Yates shuffle]]
 local function shuffle(t)
@@ -88,15 +97,15 @@ function tournament(population,k)
 	local i = 1
 	for i = 1,#population,k
 	do
-		best_fitness = -1
-		winner = population[j]
+		local best_fitness = -1
+		local winner = population[j]
 		for j = 0,k-1,1
 		do
 			local mario = population[j+i]
 			if mario == nil then
 				break
 			end
-			f = fitness(mario)
+			local f = fitness(mario)
 			if f > best_fitness then
 				best_fitness = f
 				winner = mario
