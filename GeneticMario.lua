@@ -74,47 +74,24 @@ for k=1, #r,1 do
 	end
 end ]]
 
---[[ Fisher-Yates shuffle]]
-local function shuffle(t)
-    local rand = math.random 
-    assert(t, "table.shuffle() expected a table, got nil")
-    local iterations = #t
-    local j
-    
-    for i = iterations, 2, -1 do
-        j = rand(i)
-        t[i], t[j] = t[j], t[i]
-    end
-end
 
 function fitness(mario)
 	return mario["d"] + 8*mario["t"] + 1024*mario["s"]
 end
 
 function tournament(population,k)
-	local winners = {}
-	shuffle(population)
-	local i = 1
-	for i = 1,#population,k
-	do
-		local best_fitness = -1
-		local winner = population[j]
-		for j = 0,k-1,1
-		do
-			local mario = population[j+i]
-			if mario == nil then
-				break
-			end
-			local f = fitness(mario)
-			if f > best_fitness then
-				best_fitness = f
-				winner = mario
-			end
+	local winner = {}
+	local bestFitness = -1
+	for i  = 1,k,1 do
+		local ind = math.random(1,#population)
+		local fitness = fitness(population[ind])
+		if fitness > bestFitness then
+			winner = population[ind]
+			bestFitness = fitness
 		end
-		winners[#winners+1] = winner
 	end
-
-	return winners
+	
+	return winner
 end
 
 --[[ pop = {}
@@ -169,7 +146,7 @@ end
 
 function mutation_random(chromossome, mutation_rate)
 	length = table.getn(chromossome)
-	qnt_mutation = (mutation_rate*length)/100
+	qnt_mutation = mutation_rate*length
 	math.floor(qnt_mutation)
 	for i = 1, qnt_mutation, 1 do
 		ind = math.random(1, length)
@@ -179,185 +156,157 @@ function mutation_random(chromossome, mutation_rate)
 	return chromossome
 end
 
---[[ chromossomes = initializationRandom(2, 4)
-child1, child2 = crossover_random(chromossomes[1], chromossomes[2])
-print("FILHO1")
-for k, v in ipairs(child1) do
-	print(k, v)
-end
-print("FILHO 2")
-for k, v in ipairs(child2) do
-	print(k, v)
-end
-new_chromossome = mutation_random(chromossomes[1], 25.0)
-print("mutacao")
-for k, v in ipairs(new_chromossome) do
-	print(k, v)
-end ]]
+function evolvePopulation(mario_population,k,crossover_rate,mutation_rate)
+	new_population = {}
+	local i = 1
+	while (i <= #mario_population) do
+		if math.random() < crossover_rate then
+			local winner1 = tournament(mario_population,k)
+			local winner2 = tournament(mario_population,k)
 
---[[ function generateIndividualDNA() --generar DNA de un invividuo random
-	local individual = {}
-	individual.bytes = {}
-	bytes = "_"
-	for count=0, FRAME_COUNT do
-		if math.random() < JUMP_WEIGHT then
-			individual.bytes[#individual.bytes+1] = 1 -- probabilidad JUMP_WEIGHT (93%) de saltar
+			child1 = {}
+			child2 = {}
+			child1["c"],child2["c"] = crossover_random(winner1["c"],winner2["c"])
+
+			child1["c"] = mutation_random(child1["c"],mutation_rate)
+			child2["c"] = mutation_random(child2["c"],mutation_rate)
+
+			new_population[#new_population+1] = child1
+			new_population[#new_population+1] = child2
+			i = i + 2
 		else
-			individual.bytes[#individual.bytes+1] = 0 -- probabilidad 1 - JUMP_WEIGHT (7%) de no saltar
-		end
-		bytes = bytes .. individual.bytes[#individual.bytes] --concatenar string con nuevo movimiento
-	end
-	return individual --regresar el DNA del individuo
-end
-
-function generateRandomPopulation() --generar primera poblacion random
-	for count=0,POPULATION_SIZE do
-		population[count] = generateIndividualDNA()
-	end
-end
-
-function tournamentSelection() --tomar individuos de la poblacion al azar y regresar los mejores
-
-	highestIndex = 0
-	highestFit = 0
-	highestSpeed = 3500
-
-	for i=0, TOURNAMENT_SIZE do
-		index = math.random(#population)
-		-- elegir el mejor o si hay un empate elegir el mas rapido
-		if population[index].fitness > highestFit or (population[index].fitness == highestFit and population[index].frameNumber < highestSpeed) then
-			highestIndex = index
-			highestSpeed = population[index].frameNumber
-			highestFit = population[index].fitness
+			local winner = tournament(mario_population,k)
+			clone = {}
+			clone["c"] = mutation_random(winner["c"],mutation_rate)
+			new_population[#new_population+1] = clone
+			i= i + 1
 		end
 	end
 
-	return population[highestIndex]
-
+	return new_population
 end
 
-function crossover(indiv1, indiv2) --tomar dos individuos y combinarlos (reproducirlos)
-
-	newIndiv = {}
-	newIndiv.bytes = {}
-	index = math.random(#indiv1.bytes) --random numero de bytes que el primer padre
-
-
-	for i=1, index do --copiar elementos del primer padre
-		newIndiv.bytes[#newIndiv.bytes+1] = indiv1.bytes[i]
-	end
-
-	for i=index, #indiv1. bytes do --copiar elementos del segundo padre
-		newIndiv.bytes[#newIndiv.bytes+1] = indiv2.bytes[i]
-	end
-
-	return newIndiv --regresar el hijo
-
+function read_time()
+	c = memory.readbyte(0x7F8)
+	d = memory.readbyte(0x7F9)
+	u = memory.readbyte(0x7FA)
+	return c*100+d*10+u
 end
 
-function mutate(indiv) --cambiar un poco el DNA d un individuo
+function save_state(mario,generation,is_best)
+	-- Opens a file in append mode
+	if is_best == true then
+		file = io.open("best_mario.txt", "w+")
+	else
+		file = io.open("mario_" .. generation .. ".txt","w+")
+	end
 
-	newIndiv = {}
-	newIndiv.bytes = {}
+	-- sets the default output file as test.lua
+	io.output(file)
 
-	for i=1, #indiv.bytes do
-		if indiv.bytes[i] == 1 and math.random() < MUTATION_RATE_1 then
-			newIndiv.bytes[#newIndiv.bytes+1] = 0   --convertir 1 en 0
-		else if indiv.bytes[i] == 0 and math.random() < MUTATION_RATE_0 then
-				newIndiv.bytes[#newIndiv.bytes+1] = 1 --convertir 1 en 0
-			else --caso inutil
-				newIndiv.bytes[#newIndiv.bytes+1] = indiv.bytes[i]
-			end
+	-- appends a word test to the last line of the file
+	io.write(generation)
+
+	local c = mario["c"]
+	for i = 1,#c,1 do
+		local gene = c[i]
+		io.write(",( ")
+		for j = 1,#gene,1 do
+			io.write(gene[j] .. " ")
 		end
+		io.write(")")
 	end
 
-	return newIndiv
 
 end
 
-highestFit = 0 --iniciar la mejor finess a 0
-highestSpeed = 3500 --iniciar la mejor velocidad (menor es mejor)
 
-function evolvePopulation()
+g = 5 --granularity
+P = 20 --Population size
+C = 0.001 -- Crossover rate
+M = 0.05 -- Mutation Rate
+T_s = 3 -- tournament size
 
-	local newPopulation = {}
-
-	--keeping the highest fitness
-	highestIndex = 0
-	highestFit = 0
-	highestSpeed = 3500
-	for i=1, #population do
-		if population[i].fitness > highestFit or (population[i].fitness == highestFit and population[i].frameNumber < highestSpeed) then
-			highestIndex = i
-			highestSpeed = population[i].frameNumber
-			highestFit = population[i].fitness
-		end
-	end
-
-	newPopulation[#newPopulation+1] = population[highestIndex]
-
-	for i=2, POPULATION_SIZE do
-		indiv1 = tournamentSelection() --elegir individuo 1 en base a torneo
-		indiv2 = tournamentSelection() --elegir individuo 2 en base a torneo
-		newPopulation[#newPopulation+1] = crossover(indiv1, indiv2) --hijo entren in1 y in2
-	end
-
-	for i=2, POPULATION_SIZE do
-		newPopulation[i] = mutate(newPopulation[i])
-	end
-
-	population = newPopulation --remplazando nueva poblacion con una nueva
-
+-- Generate initial population of marios
+console.writeline("Generating random chromossomes")
+chromossomes_population = initializationRandom(20,10000)
+mario_population = {}
+for i = 1,P,1
+do
+	mario = {}
+	mario["c"] = chromossomes_population[i] -- mario's chromossome
+	mario_population[i] = mario
 end
 
-console.writeline("Generando poblacion random.")
-generateRandomPopulation()
-console.writeline("Listo. Jugando con primera generacion.")
+save_state(mario_population[1],0,false)
+console.writeline("Ready. Playing with first generation")
 generation = 0
-while true do 	--Hacer para siempre
+best_mario = {}
+best_fitness = -1
+best_changed = false
+while true do
 	generation = generation + 1
-	for index=1, #population do		--por cada individuo en la poblacion
+	for i=1, #mario_population,1 do	-- for each mario
+		current_mario = mario_population[i]
+		current_chromossome = current_mario["c"]
+		completed = 1
+		endgame = false
+		savestate.load(FILE_NAME); -- load first level
 
-		local moveIndex = 0
-		savestate.load(FILE_NAME); --cargar el inicio del nivel
-
-		population[index].frameNumber = 0
-		while true do	--play with the individual
-
-			population[index].fitness = memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86)	--mario X position in level
-			population[index].fitness = population[index].fitness / 20 --normalizando dividiendo por 50
-			population[index].fitness = math.floor(population[index].fitness) --redondeando a un int
-			population[index].frameNumber = population[index].frameNumber + 1 --sumando ++1 al frame
-
-			--dibujar GUI Heads Up display
-			gui.drawBox(0, 0, 300, 35, backgroundColor, backgroundColor)
-			gui.drawText(0, 0, "Generacion No." .. generation .. "- Individuo No." .. index, 0xFFFFFFFF, 8)
-			gui.drawText(0, 10, "Fitness = " .. population[index].fitness .. " en " .. population[index].frameNumber .. " frames", 0xFFFFFFFF, 8)
-			gui.drawText(0, 20, "Top Fitness = " .. highestFit .. " en " .. highestSpeed .. " frames", 0xFFFFFFFF, 8)
-
+		for j=1,#current_chromossome,1 -- play the game
+		do
 			controller = {}
-			if population[index].bytes[moveIndex] == 0 then
-				controller["P1 B"] = true --true si el DNA dice 0
-			else
-				controller["P1 A"] = true -- population[index].bytes[moveIndex] == 1 --true si el DNA dice 1
+			current_gene = current_chromossome[j]
+			for k=1,#current_gene,1
+			do
+				controller[current_gene[k]] = true
+			end
+			for k = 1,g,1 do
+				joypad.set(controller)
+				emu.frameadvance()
+				if memory.readbyte(0x000E) == 0x06 then -- mario died
+					completed = 0
+					time_left = read_time()
+					print(j)
+					endgame = true
+					break
+				end
+				if memory.readbyte(0x001D) == 0x03 then -- mario completed the game / sliding the pole
+					print("AEEEE PORRA")
+					endgame = true
+					break
+				end
 			end
 
-			moveIndex = moveIndex + 1 		--moveindex++
-			controller["P1 Right"] = true --presionar A para saltar en P1
-			joypad.set(controller) 				--api para presionar usar el control
-
-			emu.frameadvance(); --Api avanzar frame en el juego
-
-			if memory.readbyte(0x000E) == 0x06 then --si mario muere reiniciar juego con siguiente individuo
+			if endgame == true then
 				break
 			end
+			
 		end
 
-		console.writeline("Fitness reached: " .. index .. "> " .. population[index].fitness) --log finess alcanzado
+		if completed == 1 then
+			print("AEEEE PORRA CONFIRMED")
+		end
+		current_mario["d"] = memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86) --mario X position in level
+		current_mario["t"] = time_left
+		current_mario["s"] = completed
+		fit = fitness(current_mario)
+		print("Mario ".. i .. " from generation " .. generation .. ".\n Distance = " .. current_mario["d"] .. "\n Time left = " .. current_mario["t"] .. "\n Fitness = " .. fit)
+		if fit > best_fitness then
+			best_fitness = fit
+			best_mario = current_mario
+			best_changed = true
+		end
+		save_state(current_mario,i,false)
 	end
 
-	console.writeline("")
-	console.writeline("Evolucionando nueva generation." .. "(" .. generation + 1 .. ")")
-	evolvePopulation()
+	if best_changed == true then
+		save_state(best_mario,generation,true)
+		best_changed = false
+	end
 
-end ]]
+	console.writeline("Best fitness yet = " .. best_fitness)
+	console.writeline("Evolving generation" .. "(" .. generation + 1 .. ")")
+	mario_population = evolvePopulation(mario_population,T_s,C,M)
+
+end
