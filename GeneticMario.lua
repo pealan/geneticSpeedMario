@@ -92,7 +92,6 @@ function fitness(mario)
 end
 
 function tournament(population,k)
-	print("K", k)
 	local winner = {}
 	local bestFitness = -1
 	for i  = 1,k,1 do
@@ -345,7 +344,8 @@ function evolvePopulationGuided(mario_population,k,crossover_rate,w_0,W,threshol
 			child2["w"] = w_0
 			child2["W"] = 0
 
-			local positions1,positions2 = {}
+			local positions1 ={}
+			local positions2 = {}
 			for j = 1,#winner1["pos"],1
 			do
 				local pos1 = {}
@@ -355,7 +355,7 @@ function evolvePopulationGuided(mario_population,k,crossover_rate,w_0,W,threshol
 				local pos2 = {}
 				pos2["x"] = -1
 				pos2["y"] = -1
-				positions2 = pos2
+				positions2[j] = pos2
 			end
 
 			child1["pos"] = positions1
@@ -534,6 +534,7 @@ else
 		mario["pos"] = positions_populations[i]
 		mario["fit"] = 0
 		mario["l_fit"] = 0
+		mario["fit_w"] = 0
 		mario["w"] = w_0
 		mario["W"] = 0
 		mario_population[i] = mario
