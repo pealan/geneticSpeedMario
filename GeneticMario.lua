@@ -192,37 +192,15 @@ function crossover_guided(mario1,mario2,threshold)
 	local child1 = {}
 	local child2 = {}
 	for i = 1, n, 1 do
-		local gene = chromossome1[i]
-		local child_gene = {}
-		for j = 1, #gene, 1 do
-			child_gene[j] = gene[j]
-		end
-		child1[i] = child_gene
-
-		gene = chromossome2[i]
-		child_gene = {}
-		for j = 1, #gene, 1 do
-			child_gene[j] = gene[j]
-		end
-
-		child2[i] = child_gene
+		child1[i] = chromossome1[i]
+		child2[i] = chromossome2[i]
 	end
 
 	for i = n+1, #chromossome1, 1 do
-		local gene = chromossome2[i]
-		local child_gene = {}
-		for j = 1, #gene, 1 do
-			child_gene[j] = gene[j]
-		end
-		child1[i] = child_gene
 
-		gene = chromossome1[i]
-		child_gene = {}
-		for j = 1, #gene, 1 do
-			child_gene[j] = gene[j]
-		end
+		child1[i] = chromossome2[i]
 
-		child2[i] = child_gene
+		child2[i] = chromossome1[i]
 	end
 
 	return child1,child2
@@ -270,7 +248,7 @@ function evolvePopulation(mario_population,k,crossover_rate,mutation_rate)
 	local new_population = {}
 	local i = 1
 	while (i <= #mario_population) do
-		if math.random() < crossover_rate then
+		if math.random() < crossover_rate and i+2 <= #mario_population then
 			local winner1 = tournament(mario_population,k)
 			local winner2 = tournament(mario_population,k)
 
@@ -310,8 +288,6 @@ function evolvePopulation(mario_population,k,crossover_rate,mutation_rate)
 		end
 	end
 
-	mario_population = {}
-
 	return new_population
 end
 
@@ -349,7 +325,7 @@ function evolvePopulationGuided(mario_population,k,crossover_rate,w_0,W,threshol
 
 	local i = 1
 	while (i <= #mario_population-1) do
-		if math.random() < crossover_rate then
+		if math.random() < crossover_rate and i+2 <= #mario_population then
 			print("SEX TIME")
 			local winner1 = tournament(mario_population,k)
 			local winner2 = tournament(mario_population,k)
@@ -411,8 +387,6 @@ function evolvePopulationGuided(mario_population,k,crossover_rate,w_0,W,threshol
 			i= i + 1
 		end
 	end
-
-	mario_population = {}
 
 	return new_population
 end
