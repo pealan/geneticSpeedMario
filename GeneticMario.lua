@@ -92,6 +92,7 @@ function fitness(mario)
 end
 
 function tournament(population,k)
+	print("K", k)
 	local winner = {}
 	local bestFitness = -1
 	for i  = 1,k,1 do
@@ -102,7 +103,7 @@ function tournament(population,k)
 			bestFitness = fitness
 		end
 	end
-	
+
 	return winner
 end
 
@@ -116,7 +117,7 @@ function elite_mario(mario_population)
 			bestFitness = mario["fit"]
 		end
 	end
-	
+
 	return best
 end
 
@@ -227,7 +228,7 @@ function crossover_guided(mario1,mario2,threshold)
 
 	return child1,child2
 end
-	
+
 
 function mutation_random(chromossome, mutation_rate)
 	local qnt_mutation = mutation_rate*#chromossome
@@ -504,13 +505,13 @@ if answer == "0" then
 				if endgame == true then
 					break
 				end
-				
+
 			end
 
 			if completed == 1 then
 				print("AEEEE PORRA CONFIRMED")
 			end
-			
+
 			current_mario["d"] = memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86) --mario X position in level
 			current_mario["t"] = time_left
 			current_mario["s"] = completed
@@ -534,7 +535,7 @@ if answer == "0" then
 
 		console.writeline("Best fitness yet = " .. best_fitness)
 		console.writeline("Evolving generation" .. "(" .. generation + 1 .. ")")
-		
+
 		math.randomseed(os.time())
 		mario_population = evolvePopulation(mario_population,T_s,C,M)
 
@@ -546,6 +547,7 @@ else
 	w_0 = 2
 	W = 2
 	threshold = 5
+	T_s = 3 -- tournament size
 
 	-- Generate initial population of marios
 	console.writeline("Generating random chromossomes")
@@ -616,9 +618,9 @@ else
 
 				if endgame == true then
 					break
-				end	
+				end
 			end
-			
+
 			current_mario["d"] = memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86) --mario X position in level
 			current_mario["t"] = time_left
 			current_mario["s"] = completed
@@ -632,7 +634,7 @@ else
 			end
 
 			print("Mario ".. i .. " from generation " .. generation .. ".\n Distance = " .. current_mario["d"] .. "\n Time left = " .. current_mario["t"] .. "\n Fitness = " .. fit)
-			
+
 			if fit > best_fitness then
 				best_fitness = fit
 				best_mario = current_mario
@@ -649,7 +651,7 @@ else
 
 		console.writeline("Best fitness yet = " .. best_fitness)
 		console.writeline("Evolving generation" .. "(" .. generation + 1 .. ")")
-		
+
 		math.randomseed(os.time())
 		mario_population = evolvePopulationGuided(mario_population,T_s,C,w_0,W,threshold)
 	end
