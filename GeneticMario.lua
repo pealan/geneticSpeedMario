@@ -12,7 +12,6 @@ local command = {
 
 local genes = {
 	{command[1]},
-	{command[3]},
 	{command[2]},
 	{command[2],command[3]},
 	{command[6]},
@@ -21,7 +20,6 @@ local genes = {
 	{command[4],command[3]},
 	{command[4],command[2]},
 	{command[4],command[2],command[3]},
-	{command[6],command[4]},
 	{command[6],command[4],command[3]},
 	{command[6],command[4],command[2]},
 	{command[6],command[4],command[2],command[3]},
@@ -29,7 +27,6 @@ local genes = {
 	{command[5],command[3]},
 	{command[5],command[2]},
 	{command[5],command[2],command[3]},
-	{command[5],command[6]},
 	{command[5],command[6],command[3]},
 	{command[5],command[6],command[2]},
 	{command[5],command[6],command[2],command[3]}
@@ -38,32 +35,34 @@ local genes = {
 
 function initializationRandom(p,size)
 	local chromossomes = {}
-	local lgenes = genes
 	for i = 1, p, 1
 	do
 		local chromossome = {}
 		for j = 1,size,1
 		do
-			local gene = math.random(1,22)
-			chromossome[j] = lgenes[gene]
+			local gene = math.random(1,#genes)
+			chromossome[j] = gene
 		end
 		chromossomes[i] = chromossome
 	end
 	return chromossomes
 end
 
+function get_weighted_random()
+
+end
+
 function initializationGuided(p,size)
 	local chromossomes = {}
 	local positionss = {}
-	local lgenes = genes
 	for i = 1, p, 1
 	do
 		local chromossome = {}
 		local positions = {}
 		for j = 1,size,1
 		do
-			local gene = math.random(1,22)
-			chromossome[j] = lgenes[gene]
+			local gene = math.random(1,#genes)
+			chromossome[j] = gene
 			local pos = {}
 			pos["x"] = -1
 			pos["y"] = -1
@@ -93,6 +92,7 @@ end
 
 function tournament(population,k)
 	local winner = {}
+	local best_ind = -1
 	local bestFitness = -1
 	for i  = 1,k,1 do
 		local ind = math.random(1,#population)
@@ -100,10 +100,11 @@ function tournament(population,k)
 		if fitness > bestFitness then
 			winner = population[ind]
 			bestFitness = fitness
+			best_ind = ind
 		end
 	end
 
-	return winner
+	return winner,ind
 end
 
 function elite_mario(mario_population)
@@ -216,8 +217,8 @@ function mutation_random(chromossome, mutation_rate)
 	math.floor(qnt_mutation)
 	for i = 1, qnt_mutation, 1 do
 		local ind = math.random(1, #chromossome)
-		local gene = math.random(1, 22)
-		chromossome[ind] = genes[gene]
+		local gene = math.random(1, #genes)
+		chromossome[ind] = gene
 	end
 end
 
@@ -241,8 +242,8 @@ function mutation_guided(mario,w_0,W)
 
 	local chromossome = mario["c"]
 	for i=math.min(1,mario["death"]-window),mario["death"],1 do
-		local gene = math.random(1,22)
-		chromossome[i] = genes[gene]
+		local gene = math.random(1,#genes)
+		chromossome[i] = gene
 	end
 
 	mario["w"] = window
@@ -277,12 +278,7 @@ function evolvePopulation(mario_population,k,crossover_rate,mutation_rate)
 			local c_winner = winner["c"]
 			local c_winner_copy = {}
 			for j = 1, #c_winner,1 do
-				local gene = c_winner[j]
-				local gene_copy = {}
-				for k = 1, #gene,1 do
-					gene_copy[k] = gene[k]
-				end
-				c_winner_copy[j] = gene_copy
+				c_winner_copy[j] = c_winner[j]
 			end
 
 			winner_copy["c"] = c_winner_copy
@@ -311,12 +307,7 @@ function copy_mario(mario)
 	local c_mario = mario["c"]
 	local c_copy = {}
 	for j = 1, #c_mario,1 do
-		local gene = c_mario[j]
-		local gene_copy = {}
-		for k = 1, #gene,1 do
-			gene_copy[k] = gene[k]
-		end
-		c_copy[j] = gene_copy
+		c_copy[j] = c_mario[j]
 	end
 
 	copy["c"] = c_copy
@@ -325,7 +316,7 @@ function copy_mario(mario)
 end
 
 function evolvePopulationGuided(mario_population,k,crossover_rate,w_0,W,threshold)
-	local best = elite_mario(mario_population)
+	local best,best_ind = elite_mario(mario_population)
 	local new_population = {}
 	new_population[1] = best -- Elitism
 
@@ -429,7 +420,7 @@ if answer == "0" then
 	P = 20 --Population size
 	C = 0.2 -- Crossover rate
 	M = 0.1 -- Mutation Rate
-	T_s = 3 -- tournament size
+	T_s = math.max(3,math.floor(0.15*P))-- tournament size -- tournament size
 
 	-- Generate initial population of marios
 	console.writeline("Generating random chromossomes")
@@ -443,7 +434,7 @@ if answer == "0" then
 	end
 
 	json = require "json"
-	bests = 1
+	bests = 0
 	console.writeline("Ready. Playing with first generation")
 	generation = 0
 	best_mario = {}
@@ -462,9 +453,11 @@ if answer == "0" then
 			do
 				controller = {}
 				current_gene = current_chromossome[j]
-				for k=1,#current_gene,1
+				combo = genes[current_gene]
+				for k=1,#combo,1
 				do
-					controller[current_gene[k]] = true
+					button = combo[k]
+					controller[button] = true
 				end
 				for k = 1,g,1 do
 					joypad.set(controller)
@@ -536,7 +529,7 @@ else
 	w_0 = 2
 	W = 2
 	threshold = 5
-	T_s = 3 -- tournament size
+	T_s = math.max(3,math.floor(0.15*P))-- tournament size
 
 	-- Generate initial population of marios
 	console.writeline("Generating random chromossomes")
@@ -556,7 +549,7 @@ else
 	end
 
 	json = require "json"
-	bests = 1
+	bests = 0
 	console.writeline("Ready. Playing with first generation")
 	generation = 0
 	best_mario = {}
@@ -578,10 +571,10 @@ else
 			do
 				controller = {}
 				current_gene = current_chromossome[j]
-
-				for k=1,#current_gene,1
+				combo = genes[current_gene]
+				for k=1,#combo,1
 				do
-					local button = current_gene[k]
+					button = combo[k]
 					controller[button] = true
 				end
 
