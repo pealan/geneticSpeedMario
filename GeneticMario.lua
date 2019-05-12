@@ -240,7 +240,7 @@ function mutation_guided(mario,w_0,W)
 	end
 
 	local chromossome = mario["c"]
-	for i=mario["death"]-window,mario["death"],1 do
+	for i=math.min(1,mario["death"]-window),mario["death"],1 do
 		local gene = math.random(1,22)
 		chromossome[i] = genes[gene]
 	end
@@ -422,7 +422,7 @@ function save_state(mario,generation,is_best)
 end
 
 --------------------------------------------------------- MAIN ROUTINE ------------------------------------------
-local answer = "0"
+local answer = "1"
 
 if answer == "0" then
 	g = 5 --granularity
@@ -517,7 +517,7 @@ if answer == "0" then
 		end
 
 		if best_changed == true then
-			best = bests+1
+			bests = bests+1
 			save_state(json.encode(best_mario),generation,true)
 			best_changed = false
 		end
