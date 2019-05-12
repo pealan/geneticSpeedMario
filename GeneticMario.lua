@@ -229,19 +229,16 @@ function mutation_guided(mario,w_0,W)
 	local window = 0
 	if mario["fit"] > mario["l_fit"] then
 		mario["w"] = w_0
-		window = w_0
 	elseif current_mario["W"] % W == 0 and mario["l_fit"] <= mario["fit_w"] then
 		if 2*mario["w"] <= mario["death"] then
 			mario["w"] = 2*mario["w"]
-			window = 2*mario["w"]
-			print(window)
 		end
-	else
-		window = mario["w"]
 	end
+	window = mario["w"]
+	print(window)
 
 	local chromossome = mario["c"]
-	for i=math.min(1,mario["death"]-window),mario["death"],1 do
+	for i=math.max(1,mario["death"]-window),mario["death"],1 do
 		local gene = math.random(1,#genes)
 		chromossome[i] = gene
 	end
