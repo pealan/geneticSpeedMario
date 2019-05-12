@@ -481,6 +481,14 @@ if answer == "0" then
 						endgame = true
 						break
 					end
+					if memory.readbyte(0x000E) == 0x03 then -- going down pipe
+						while memory.readbyte(0x000E) ~= 0x02 do
+							emu.frameadvance()
+						end
+						while memory.readbyte(0x000E) ~= 0x07 do
+							emu.frameadvance()
+						end
+					end
 				end
 
 				if endgame == true then
@@ -595,6 +603,14 @@ else
 						print("AEEEE PORRA")
 						endgame = true
 						break
+					end
+					if memory.readbyte(0x000E) == 0x03 then -- going down pipe
+						while memory.readbyte(0x000E) ~= 0x02 do
+							emu.frameadvance()
+						end
+						while memory.readbyte(0x000E) ~= 0x07 do
+							emu.frameadvance()
+						end
 					end
 				end
 
