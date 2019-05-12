@@ -74,18 +74,6 @@ function initializationGuided(p,size)
 	return chromossomes,positionss
 end
 
---[[ r = initializationRandom(3,5)
-for k=1, #r,1 do
-	print(k)
-	local v = r[k]
-	for l = 1,5,1
-	do
-		local v2 = v[l]
-		print(v2)
-	end
-end ]]
-
-
 function fitness(mario)
 	return mario["d"] + 8*mario["t"]*mario["s"] + 1024*mario["s"]
 end
@@ -112,9 +100,10 @@ function elite_mario(mario_population)
 	local bestFitness = -1
 	for i  = 1,#mario_population,1 do
 		local mario = mario_population[i]
-		if mario["fit"] > bestFitness then
+		local fit_list = mario["fit_list"]
+		if fit_list[#fit_list] > bestFitness then
 			best = mario_population[i]
-			bestFitness = mario["fit"]
+			bestFitness = fit_list[#fit_list]
 		end
 	end
 
@@ -201,19 +190,19 @@ function mutation_random(chromossome, mutation_rate)
 end
 
 function mutation_guided(mario,w_0,W)
-	if current_mario["W"] % W == 0 then
-		print("THE PURGE")
-	end
+	local fit_list = mario["fit_list"]
 	local window = 0
-	if mario["fit"] > mario["l_fit"] then
+	if fit_list[#fit_list] > fit_list[math.max(#fit_list-1,1)] then
+		print(" GOT BETTER")
 		mario["w"] = w_0
-	elseif current_mario["W"] % W == 0 and mario["l_fit"] <= mario["fit_w"] then
+	elseif fit_list[#fit_list] <= fit_list[math.max(#fit_list-W,1)] then
 		if 2*mario["w"] <= mario["death"] then
+			print(" GOT WORSE. EXPAND")
 			mario["w"] = 2*mario["w"]
 		end
 	end
 	window = mario["w"]
-	print(window)
+	print(" " .. window)
 
 	local chromossome = mario["c"]
 	for i=math.max(1,mario["death"]-window),mario["death"],1 do
@@ -272,10 +261,6 @@ function copy_mario(mario)
 	local copy = {}
 
 	copy["w"] = mario["w"]
-	copy["W"] = mario["W"]
-	copy["fit"] = mario["fit"]
-	copy["fit_w"] = mario["fit_w"]
-	copy["l_fit"] = mario["l_fit"]
 	copy["death"] = mario["death"]
 
 	--Hard-copying chromossome
@@ -286,6 +271,15 @@ function copy_mario(mario)
 	end
 
 	copy["c"] = c_copy
+
+	--Hard-copying fit list
+	local f_mario = mario["fit_list"]
+	local f_copy = {}
+	for j = 1, #f_mario,1 do
+		f_copy[j] = f_mario[j]
+	end
+
+	copy["fit_list"] = f_copy
 
 	return copy
 end
@@ -304,17 +298,11 @@ function evolvePopulationGuided(mario_population,k,crossover_rate,w_0,W,threshol
 
 			local child1 = {}
 			local child2 = {}
-			child1["fit"] = 0
-			child1["l_fit"] = 0
-			child1["fit_w"] = 0
+			child1["fit_list"] = {}
 			child1["w"] = w_0
-			child1["W"] = 0
 
-			child2["fit"] = 0
-			child2["l_fit"] = 0
-			child2["fit_w"] = 0
+			child2["fit_list"] = {}
 			child2["w"] = w_0
-			child2["W"] = 0
 
 			local positions1 ={}
 			local positions2 = {}
@@ -515,11 +503,8 @@ else
 		mario = {}
 		mario["c"] = chromossomes_population[i] -- mario's chromossome
 		mario["pos"] = positions_populations[i]
-		mario["fit"] = 0
-		mario["l_fit"] = 0
-		mario["fit_w"] = 0
+		mario["fit_list"] = {}
 		mario["w"] = w_0
-		mario["W"] = 0
 		mario_population[i] = mario
 	end
 
@@ -534,8 +519,7 @@ else
 		generation = generation + 1
 		for i=1, #mario_population,1 do	-- for each mario
 			current_mario = mario_population[i]
-			current_mario["l_fit"] = current_mario["fit"]
-			current_mario["W"] = current_mario["W"]+1
+			current_fit_list = current_mario["fit_list"]
 			current_chromossome = current_mario["c"]
 			current_positions = current_mario["pos"]
 			completed = 1
@@ -593,11 +577,7 @@ else
 			current_mario["gen"] = generation
 
 			fit = fitness(current_mario)
-			current_mario["fit"] = fit
-
-			if current_mario["W"] % W == 0 then
-				current_mario["fit_w"] = current_mario["fit"]
-			end
+			current_fit_list[#current_fit_list+1] = fit
 
 			print("Mario ".. i .. " from generation " .. generation .. ".\n Distance = " .. current_mario["d"] .. "\n Time left = " .. current_mario["t"] .. "\n Fitness = " .. fit)
 
