@@ -126,36 +126,14 @@ function crossover_random(chromossome1, chromossome2) --crossover of a pair of c
 	local child1 = {}
 	local child2 = {}
 	for i = 1, index, 1 do
-		local gene = chromossome1[i]
-		local child_gene = {}
-		for j = 1, #gene, 1 do
-			child_gene[j] = gene[j]
-		end
-		child1[i] = child_gene
+		child1[i] = chromossome1[i]
 
-		gene = chromossome2[i]
-		child_gene = {}
-		for j = 1, #gene, 1 do
-			child_gene[j] = gene[j]
-		end
-
-		child2[i] = child_gene
+		child2[i] = chromossome2[i]
 	end
 	for i = index+1, #chromossome1, 1 do
-		local gene = chromossome2[i]
-		local child_gene = {}
-		for j = 1, #gene, 1 do
-			child_gene[j] = gene[j]
-		end
-		child1[i] = child_gene
+		child1[i] = chromossome2[i]
 
-		gene = chromossome1[i]
-		child_gene = {}
-		for j = 1, #gene, 1 do
-			child_gene[j] = gene[j]
-		end
-
-		child2[i] = child_gene
+		child2[i] = chromossome1[i]
 	end
 	return child1, child2
 end
