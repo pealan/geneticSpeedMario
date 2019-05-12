@@ -88,7 +88,7 @@ end ]]
 
 
 function fitness(mario)
-	return mario["d"] + 8*mario["t"] + 1024*mario["s"]
+	return mario["d"] + 8*mario["t"]*mario["s"] + 1024*mario["s"]
 end
 
 function tournament(population,k)
@@ -189,6 +189,10 @@ function crossover_guided(mario1,mario2,threshold)
 		end
 	end
 
+	if n == -1 then
+		n = math.random(1,#chromossome1)
+	end
+
 	local child1 = {}
 	local child2 = {}
 	for i = 1, n, 1 do
@@ -229,6 +233,7 @@ function mutation_guided(mario,w_0,W)
 		if 2*mario["w"] <= mario["death"] then
 			mario["w"] = 2*mario["w"]
 			window = 2*mario["w"]
+			print(window)
 		end
 	else
 		window = mario["w"]
@@ -249,6 +254,7 @@ function evolvePopulation(mario_population,k,crossover_rate,mutation_rate)
 	local i = 1
 	while (i <= #mario_population) do
 		if math.random() < crossover_rate and i+2 <= #mario_population then
+			print("SEX_TIME")
 			local winner1 = tournament(mario_population,k)
 			local winner2 = tournament(mario_population,k)
 
@@ -256,8 +262,8 @@ function evolvePopulation(mario_population,k,crossover_rate,mutation_rate)
 			local child2 = {}
 			child1["c"],child2["c"] = crossover_random(winner1["c"],winner2["c"])
 
-			child1["c"] = mutation_random(child1["c"],mutation_rate)
-			child2["c"] = mutation_random(child2["c"],mutation_rate)
+			mutation_random(child1["c"],mutation_rate)
+			mutation_random(child2["c"],mutation_rate)
 
 			new_population[#new_population+1] = child1
 			new_population[#new_population+1] = child2
@@ -412,16 +418,17 @@ function save_state(mario,generation,is_best)
 
 	-- appends a word test to the last line of the file
 	io.write(mario)
+
 end
 
 --------------------------------------------------------- MAIN ROUTINE ------------------------------------------
-local answer = "1"
+local answer = "0"
 
 if answer == "0" then
 	g = 5 --granularity
 	P = 20 --Population size
-	C = 0.005 -- Crossover rate
-	M = 0.05 -- Mutation Rate
+	C = 0.2 -- Crossover rate
+	M = 0.1 -- Mutation Rate
 	T_s = 3 -- tournament size
 
 	-- Generate initial population of marios
@@ -516,7 +523,7 @@ if answer == "0" then
 	end
 else
 	g = 5 --granularity
-	P = 10 --Population size
+	P = 20 --Population size
 	C = 0.2 -- Crossover rate
 	w_0 = 2
 	W = 2
@@ -619,7 +626,7 @@ else
 		end
 
 		if best_changed == true then
-			best = bests+1
+			bests = bests+1
 			save_state(json.encode(best_mario),generation,true)
 			best_changed = false
 		end
