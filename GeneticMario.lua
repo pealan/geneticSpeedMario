@@ -378,7 +378,7 @@ function save_state(mario,generation,is_best)
 end
 
 --------------------------------------------------------- MAIN ROUTINE ------------------------------------------
-local answer = "1"
+local answer = "0"
 
 if answer == "0" then
 	g = 5 --granularity
@@ -411,7 +411,9 @@ if answer == "0" then
 			current_mario = mario_population[i]
 			current_chromossome = current_mario["c"]
 			completed = 1
+			final_d = 0
 			endgame = false
+			p = 0
 			savestate.load(FILE_NAME); -- load first level
 
 			for j=1,#current_chromossome,1 -- play the game
@@ -419,48 +421,66 @@ if answer == "0" then
 				controller = {}
 				current_gene = current_chromossome[j]
 				combo = genes[current_gene]
-				for k=1,#combo,1
+
+				for k=1,#combo,1 -- load the actual commands on the controller
 				do
 					button = combo[k]
 					controller[button] = true
 				end
-				for k = 1,g,1 do
+
+				for k = 1,g,1 do -- Play the commands
 					joypad.set(controller)
 					emu.frameadvance()
+
+					-- Needs to check for completion each frame
 					if memory.readbyte(0x000E) == 0x06 then -- mario died
-						completed = 0
-						time_left = read_time()
-						print(j)
+						completed = 0	
 						endgame = true
 						break
 					end
-					if memory.readbyte(0x001D) == 0x03 then -- mario completed the game / sliding the pole
-						print("AEEEE PORRA")
+	
+					if memory.readbyte(0x001D) == 0x03 then --mario won
+						print("AE PORRA")
 						endgame = true
 						break
 					end
-					if memory.readbyte(0x000E) == 0x03 then -- going down pipe
-						while memory.readbyte(0x000E) ~= 0x02 do
-							emu.frameadvance()
-						end
-						while memory.readbyte(0x000E) ~= 0x07 do
-							emu.frameadvance()
-						end
-					end
+				end
+
+				if p == 0 then 
+					final_d = memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86) --mario X position in level
+				else -- mario is inside pipe world now, x is measured differently
+					final_d = c + (memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86) - 14)*9 + 50
 				end
 
 				if endgame == true then
 					break
 				end
 
+				--gui.text(1,100,final_d) -- print x position on screen
+				--gui.text(1,200,memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86)) -- print x position on screen
+
+				if memory.readbyte(0x000E) == 0x03 then -- going down pipe
+					c = 916 -- first possible entry point
+					p = 1
+					while memory.readbyte(0x000E) ~= 0x08 do -- everything back to normal
+						emu.frameadvance()
+					end
+				end
+
+				if memory.readbyte(0x000E) == 0x02 then -- going side pipe
+					p  = 0
+					while memory.readbyte(0x000E) ~= 0x08 do -- everything back to normal
+						emu.frameadvance()
+					end
+				end
 			end
 
 			if completed == 1 then
 				print("AEEEE PORRA CONFIRMED")
 			end
 
-			current_mario["d"] = memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86) --mario X position in level
-			current_mario["t"] = time_left
+			current_mario["d"] = final_d
+			current_mario["t"] = read_time()
 			current_mario["s"] = completed
 			current_mario["gen"] = generation
 			fit = fitness(current_mario)
@@ -533,51 +553,68 @@ else
 				controller = {}
 				current_gene = current_chromossome[j]
 				combo = genes[current_gene]
-				for k=1,#combo,1
+
+				for k=1,#combo,1 -- load the actual commands on the controller
 				do
 					button = combo[k]
 					controller[button] = true
 				end
 
-				for k = 1,g,1 do
+				for k = 1,g,1 do -- Play the commands
 					joypad.set(controller)
 					emu.frameadvance()
-					pos = {}
-					pos["x"] = memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86)
-					pos["y"] = memory.readbyte(0x03B8) + 16
-					current_positions[j] = pos
+
+					-- Needs to check for completion each frame
 					if memory.readbyte(0x000E) == 0x06 then -- mario died
 						completed = 0
-						time_left = read_time()
 						current_mario["death"] = j
 						endgame = true
 						break
 					end
-					if memory.readbyte(0x001D) == 0x03 then -- mario completed the game / sliding the pole
-						print("AEEEE PORRA")
+	
+					if memory.readbyte(0x001D) == 0x03 then --mario won
+						print("AE PORRA")
 						endgame = true
 						break
 					end
-					if memory.readbyte(0x000E) == 0x03 then -- going down pipe
-						print("DOWN PIPE")
-						while memory.readbyte(0x000E) ~= 0x02 do
-							emu.frameadvance()
-						end
-						print("SIDE PIPE")
-						while memory.readbyte(0x000E) ~= 0x07 do
-							emu.frameadvance()
-						end
-						print("OUT OF THERE")
-					end
 				end
+
+				if p == 0 then 
+					final_d = memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86) --mario X position in level
+				else -- mario is inside pipe world now, x is measured differently
+					final_d = c + (memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86) - 14)*9 + 50
+				end
+
+				pos = {}
+				pos["x"] = final_d
+				pos["y"] = memory.readbyte(0x03B8) + 16
+				current_positions[j] = pos
+
+				--gui.text(1,100,final_d) -- print x position on screen
+				--gui.text(1,200,memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86)) -- print x position on screen
 
 				if endgame == true then
 					break
 				end
+
+				if memory.readbyte(0x000E) == 0x03 then -- going down pipe
+					c = 916 -- first possible entry point
+					p = 1
+					while memory.readbyte(0x000E) ~= 0x08 do -- everything back to normal
+						emu.frameadvance()
+					end
+				end
+
+				if memory.readbyte(0x000E) == 0x02 then -- going side pipe
+					p  = 0
+					while memory.readbyte(0x000E) ~= 0x08 do -- everything back to normal
+						emu.frameadvance()
+					end
+				end
 			end
 
-			current_mario["d"] = memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86) --mario X position in level
-			current_mario["t"] = time_left
+			current_mario["d"] = final_d
+			current_mario["t"] = read_time()
 			current_mario["s"] = completed
 			current_mario["gen"] = generation
 
