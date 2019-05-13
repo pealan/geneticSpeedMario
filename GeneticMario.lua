@@ -1,5 +1,7 @@
 FILE_NAME = "SMB1-1.state"  --archivo de juego guardado iniciando el nivel
-
+seed = os.time()
+math.randomseed(seed)
+print(seed)
 local command = {
 	"nothing",
 	"P1 A",
@@ -557,12 +559,15 @@ else
 						break
 					end
 					if memory.readbyte(0x000E) == 0x03 then -- going down pipe
+						print("DOWN PIPE")
 						while memory.readbyte(0x000E) ~= 0x02 do
 							emu.frameadvance()
 						end
+						print("SIDE PIPE")
 						while memory.readbyte(0x000E) ~= 0x07 do
 							emu.frameadvance()
 						end
+						print("OUT OF THERE")
 					end
 				end
 
@@ -598,7 +603,8 @@ else
 		console.writeline("Best fitness yet = " .. best_fitness)
 		console.writeline("Evolving generation" .. "(" .. generation + 1 .. ")")
 
-		math.randomseed(os.time())
 		mario_population = evolvePopulationGuided(mario_population,T_s,C,w_0,W,threshold)
 	end
 end
+
+print("THIS SHOULD NEVER BE PRINTED")
