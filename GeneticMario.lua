@@ -378,7 +378,7 @@ function save_state(mario,generation,is_best)
 end
 
 --------------------------------------------------------- MAIN ROUTINE ------------------------------------------
-local answer = "0"
+local answer = "1"
 
 if answer == "0" then
 	g = 5 --granularity
@@ -449,7 +449,7 @@ if answer == "0" then
 				if p == 0 then 
 					final_d = memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86) --mario X position in level
 				else -- mario is inside pipe world now, x is measured differently
-					final_d = c + (memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86) - 14)*9 + 50
+					final_d = math.min((c + (memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86) - 14)*9 + 1),2561)
 				end
 
 				if endgame == true then
@@ -545,6 +545,7 @@ else
 			current_chromossome = current_mario["c"]
 			current_positions = current_mario["pos"]
 			completed = 1
+			p = 0
 			endgame = false
 			savestate.load(FILE_NAME); -- load first level
 
@@ -582,7 +583,7 @@ else
 				if p == 0 then 
 					final_d = memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86) --mario X position in level
 				else -- mario is inside pipe world now, x is measured differently
-					final_d = c + (memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86) - 14)*9 + 50
+					final_d = math.min((c + (memory.readbyte(0x6D) * 0x100 + memory.readbyte(0x86) - 14)*9 + 1),2561)
 				end
 
 				pos = {}
