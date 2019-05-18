@@ -15,3 +15,6 @@ Simple genetic algorithm developed for the 2nd project in Artificial Intelligenc
 ### PROTIPs
 1. The big number that first appears on the console is your seed for this run. You can hardcode it on the script in order to achieve the same results again, assuming that you are running with the same configuration.
 2. When the emulator is on focus, press "+" o the keyboard to increase the speed.
+
+## Analyzing results
+Currently, all marios from the current generation are saved in json files after they are tested. When a new best mario is noticed, it is saved on `best_mario_i.json`. Please clean your marios on the directory before running the main script again or suffer the consequences of maybe being confused. In order to see the evolution of your best marios, go through the same process as stated before but run History.lua this time and watch the evolution. This script will search for json in the format `best_mario_i.json` for `i` going from 1 to `n >=1` in increasing order
