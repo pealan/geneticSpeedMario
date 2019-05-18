@@ -1,4 +1,4 @@
-FILE_NAME = "SMB1-1.state"  --archivo de juego guardado iniciando el nivel
+FILE_NAME = "SMB1-1.state"
 seed = os.time()
 math.randomseed(seed)
 print(seed)
@@ -50,8 +50,8 @@ function initializationRandom(p,size)
 	return chromossomes
 end
 
--- Uncomment to un-guide it
---[[ function initializationGuided(p,size)
+
+function initializationGuided1(p,size)
 	local chromossomes = {}
 	local positionss = {}
 	for i = 1, p, 1
@@ -71,9 +71,9 @@ end
 		chromossomes[i] = chromossome
 	end
 	return chromossomes,positionss
-end ]]
+end
 
-function initializationGuided(p,size)
+function initializationGuided2(p,size)
 	local chromossomes = {}
 	local positionss = {}
 	for i = 1, p, 1
@@ -395,9 +395,9 @@ end
 function save_state(mario,generation,is_best)
 	-- Opens a file in append mode
 	if is_best == true then
-		file = io.open("best_mario_".. bests .. ".txt", "w+")
+		file = io.open("best_mario_".. bests .. ".json", "w+")
 	else
-		file = io.open("mario_" .. generation .. ".txt","w+")
+		file = io.open("mario_" .. generation .. ".json","w+")
 	end
 
 	-- sets the default output file as test.lua
@@ -408,14 +408,24 @@ function save_state(mario,generation,is_best)
 
 end
 
---------------------------------------------------------- MAIN ROUTINE ------------------------------------------
-local answer = "1"
+function readAll(file)
+    local f = assert(io.open(file, "rb"))
+    local content = f:read("*all")
+    f:close()
+    return content
+end
 
-if answer == "0" then
-	g = 5 --granularity
-	P = 20 --Population size
-	C = 0.2 -- Crossover rate
-	M = 0.1 -- Mutation Rate
+--------------------------------------------------------- MAIN ROUTINE ------------------------------------------
+json = require "json"
+local pms = readAll("parameters.json")
+local parameters = json.decode(pms)
+local answer = parameters.mode
+
+if answer == 1 then
+	g = parameters.g --granularity
+	P = parameters.P --Population size
+	C = parameters.C -- Crossover rate
+	M = parameters.M -- Mutation Rate
 	T_s = math.max(3,math.floor(0.15*P))-- tournament size -- tournament size
 
 	-- Generate initial population of marios
@@ -429,7 +439,6 @@ if answer == "0" then
 		mario_population[i] = mario
 	end
 
-	json = require "json"
 	bests = 0
 	console.writeline("Ready. Playing with first generation")
 	generation = 0
@@ -440,6 +449,7 @@ if answer == "0" then
 		generation = generation + 1
 		for i=1, #mario_population,1 do	-- for each mario
 			current_mario = mario_population[i]
+			current_mario["g"] = g
 			current_chromossome = current_mario["c"]
 			completed = 1
 			final_d = 0
@@ -534,18 +544,22 @@ if answer == "0" then
 		mario_population = evolvePopulation(mario_population,T_s,C,M)
 
 	end
-else
-	g = 5 --granularity
-	P = 50 --Population size
-	C = 0.2 -- Crossover rate
-	w_0 = 2
-	W = 2
-	threshold = 5
+elseif answer == 2 then
+	g = parameters.g --granularity
+	P = parameters.P --Population size
+	C = parameters.C -- Crossover rate
+	w_0 = parameters.w_0
+	W = parameters.W
+	threshold = parameters.threshold
 	T_s = math.max(3,math.floor(0.15*P))-- tournament size
 
 	-- Generate initial population of marios
-	console.writeline("Generating random chromossomes")
-	chromossomes_population, positions_populations = initializationGuided(P,10000/g)
+	console.writeline("Generating guided chromossomes")
+	if parameters.ini_random == 1 then
+		chromossomes_population, positions_populations = initializationGuided1(P,10000/g)
+	else
+		chromossomes_population, positions_populations = initializationGuided2(P,10000/g)
+	end 
 	mario_population = {}
 	for i = 1,P,1
 	do
@@ -557,7 +571,6 @@ else
 		mario_population[i] = mario
 	end
 
-	json = require "json"
 	bests = 0
 	console.writeline("Ready. Playing with first generation")
 	generation = 0
@@ -568,6 +581,7 @@ else
 		generation = generation + 1
 		for i=1, #mario_population,1 do	-- for each mario
 			current_mario = mario_population[i]
+			current_mario["g"] = g
 			current_fit_list = current_mario["fit_list"]
 			current_chromossome = current_mario["c"]
 			current_positions = current_mario["pos"]
@@ -671,4 +685,6 @@ else
 		mario_population = evolvePopulationGuided(mario_population,T_s,C,w_0,W,threshold)
 	end
 end
+
+print("Invalid mode")
 
