@@ -50,9 +50,28 @@ function initializationRandom(p,size)
 	return chromossomes
 end
 
-function get_weighted_random()
-
-end
+-- Uncomment to un-guide it
+--[[ function initializationGuided(p,size)
+	local chromossomes = {}
+	local positionss = {}
+	for i = 1, p, 1
+	do
+		local chromossome = {}
+		local positions = {}
+		for j = 1,size,1
+		do
+			local gene = math.random(1,#genes)
+			chromossome[j] = gene
+			local pos = {}
+			pos["x"] = -1
+			pos["y"] = -1
+			positions[j] = pos
+		end
+		positionss[i] = positions
+		chromossomes[i] = chromossome
+	end
+	return chromossomes,positionss
+end ]]
 
 function initializationGuided(p,size)
 	local chromossomes = {}
@@ -63,7 +82,19 @@ function initializationGuided(p,size)
 		local positions = {}
 		for j = 1,size,1
 		do
-			local gene = math.random(1,#genes)
+			local method = math.random(2) --guided or not
+			local gene = 1
+			if method == 1 then -- guided
+				local guided_gene = math.random(2)
+				if guided_gene == 1 then
+					gene = 7
+				else
+					gene = 9
+				end
+			else
+				gene = math.random(1,#genes)
+			end
+
 			chromossome[j] = gene
 			local pos = {}
 			pos["x"] = -1
@@ -148,12 +179,12 @@ function crossover_guided(mario1,mario2,threshold)
 		local y1 = pos1_values["y"]
 		local x2 = pos2_values["x"]
 		local y2 = pos2_values["y"]
-		if x1 == -1 or x2 == -1 then
+		-- either one of them died early or they both completed the game (x = 3161 == pole)
+		if x1 == -1 or x2 == -1 or (x1 >= 3161 and x2 >= 3161) then
 			break
 		end
 		local delta = euclidian(x1, y1, x2, y2)
 		if delta < smallest and delta < threshold  then
-			print("GOTTEM")
 			smallest = delta
 			n = i
 		end
@@ -221,7 +252,7 @@ function evolvePopulation(mario_population,k,crossover_rate,mutation_rate)
 	local i = 1
 	while (i <= #mario_population) do
 		if math.random() < crossover_rate and i+2 <= #mario_population then
-			print("SEX_TIME")
+			print("CROSSOVER_TIME")
 			local winner1 = tournament(mario_population,k)
 			local winner2 = tournament(mario_population,k)
 
@@ -236,7 +267,7 @@ function evolvePopulation(mario_population,k,crossover_rate,mutation_rate)
 			new_population[#new_population+1] = child2
 			i = i + 2
 		else
-			print("X-MEN TIME")
+			print("MUTATION TIME")
 			local winner = tournament(mario_population,k)
 			local winner_copy = {}
 
@@ -294,7 +325,7 @@ function evolvePopulationGuided(mario_population,k,crossover_rate,w_0,W,threshol
 	local i = 1
 	while (i <= #mario_population-1) do
 		if math.random() < crossover_rate and i+2 <= #mario_population then
-			print("SEX TIME")
+			print("CROSSOVER TIME")
 			local winner1 = tournament(mario_population,k)
 			local winner2 = tournament(mario_population,k)
 
@@ -329,7 +360,7 @@ function evolvePopulationGuided(mario_population,k,crossover_rate,w_0,W,threshol
 			new_population[#new_population+1] = child2
 			i = i + 2
 		else
-			print("X-MEN TIME")
+			print("MUTATION TIME")
 			local winner = tournament(mario_population,k)
 			local winner_copy = copy_mario(winner)
 
@@ -440,7 +471,6 @@ if answer == "0" then
 					end
 	
 					if memory.readbyte(0x001D) == 0x03 then --mario won
-						print("AE PORRA")
 						endgame = true
 						break
 					end
@@ -475,9 +505,6 @@ if answer == "0" then
 				end
 			end
 
-			if completed == 1 then
-				print("AEEEE PORRA CONFIRMED")
-			end
 
 			current_mario["d"] = final_d
 			current_mario["t"] = read_time()
@@ -509,7 +536,7 @@ if answer == "0" then
 	end
 else
 	g = 5 --granularity
-	P = 20 --Population size
+	P = 50 --Population size
 	C = 0.2 -- Crossover rate
 	w_0 = 2
 	W = 2
@@ -574,7 +601,7 @@ else
 					end
 	
 					if memory.readbyte(0x001D) == 0x03 then --mario won
-						print("AE PORRA")
+						current_mario["death"] = j -- in a way, victory is death
 						endgame = true
 						break
 					end
@@ -645,4 +672,3 @@ else
 	end
 end
 
-print("THIS SHOULD NEVER BE PRINTED")
