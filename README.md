@@ -12,5 +12,6 @@ Simple genetic algorithm developed for the 2nd project in Artificial Intelligenc
 7. On Lua Console go to Open Script and choose GeneticMario.lua 
 8. Click on Toggle Script
 
-### PROTIP: The big number that first appears on the console is your seed for this run. You can hardcode it on the script in order to achieve the same results again, assuming that you are running with the same configuration.
-### PROTIP 2: When the emulator is on focus, press "+" o the keyboard to increase the speed.
+### PROTIPs
+1. The big number that first appears on the console is your seed for this run. You can hardcode it on the script in order to achieve the same results again, assuming that you are running with the same configuration.
+2. When the emulator is on focus, press "+" o the keyboard to increase the speed.
